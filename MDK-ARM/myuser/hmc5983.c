@@ -14,7 +14,7 @@ uint8_t Modedata[] = {ModeAdr,0x00};
 uint8_t CRAdata[] = {CRA,0xFC};
 uint8_t Adr1[] = {0x03};
 uint8_t ReDa[6],SWhmc5983 = 0;
-extern int16_t x,y,z,offsetX,offsetY,offsetZ;
+extern int16_t x,y,z,offsetX,offsetY,offsetZ,hmcwritedata[4],hmcreaddata[4];
 extern double angle;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
@@ -42,7 +42,7 @@ void hmc5983_read(void)
 		
 		{
 			SWhmc5983 = 0;
-			HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+			HAL_GPIO_TogglePin(I2CERR_GPIO_Port,I2CERR_Pin);
 	  	   HAL_I2C_DeInit(&hi2c1);        //释放IO口为GPIO，复位句柄状态标志 
 			HAL_I2C_Init(&hi2c1);
          //HAL_I2C_Init(&hi2c1);          //这句重新初始化I2C控制器
@@ -57,7 +57,7 @@ void hmc5983_read(void)
        y = (ReDa[4] << 8 | ReDa[5])-offsetY; //Combine MSB and LSB of Y Data output register
 		 //if(ReDa[1]==0&ReDa[2]==0&ReDa[5]==0&ReDa[4]==0) SWhmc5983 = 0;
 	    angle= atan2((double)y,(double)x) * (180 / 3.14159265) + 180;
-	    osDelay(3);
+	    osDelay(4);
 		}
    }
 }
@@ -75,22 +75,20 @@ void hmc5983task(void const * argument)
 
 void hmc5983jzinit(void)
 {
-    int16_t hmcwritedata[4],hmcreaddata[4];
+    //int16_t hmcwritedata[4],hmcreaddata[4];
 	int xMax, xMin, yMax, yMin, zMax, zMin; 
-	flashread1(hmcreaddata,4);
-	if(hmcreaddata[0] != 0x30)
-	{
-		
+	//flashread1(hmcreaddata,4);
+		flashinit();
 		HAL_GPIO_WritePin(N1_GPIO_Port,N1_Pin,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(N2_GPIO_Port,N2_Pin,GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(N3_GPIO_Port,N3_Pin,GPIO_PIN_RESET);
       HAL_GPIO_WritePin(N4_GPIO_Port,N4_Pin,GPIO_PIN_SET);
-		TIM3->CCR1 = 990;
-		TIM3->CCR2 = 990;
+		TIM3->CCR3 = 990;
+		TIM3->CCR4 = 990;
 		osDelay(20);
-		TIM3->CCR1 = 380;
-		TIM3->CCR2 = 380;
-		for(unsigned int i =0;i<6000;i++)
+		TIM3->CCR3 = 400;
+		TIM3->CCR4 = 400;
+		for(unsigned int i =0;i<3000;i++)
 		{
 			hmc5983_read();
 			if(x>xMax) xMax = x*0.2 + xMax*0.8;  			 
@@ -113,12 +111,11 @@ void hmc5983jzinit(void)
 		hmcwritedata[2] = offsetY;
 		hmcwritedata[3] = offsetZ;
 		flashwrite1(hmcwritedata,4);
-	}
-	else
-	{
-		offsetX = hmcreaddata[1];
-		offsetY = hmcreaddata[2];
-		offsetZ = hmcreaddata[3];
-	}
+//	else
+//	{
+//		offsetX = hmcreaddata[1];
+//		offsetY = hmcreaddata[2];
+//		offsetZ = hmcreaddata[3];
+//	}
 }		
 		

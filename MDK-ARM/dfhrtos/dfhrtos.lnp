@@ -31,6 +31,8 @@
 "dfhrtos\stm32f1xx_hal_timebase_tim.o"
 "dfhrtos\hmc5983.o"
 "dfhrtos\flash.o"
+"dfhrtos\moto.o"
+"dfhrtos\pid.o"
 "dfhrtos\startup_stm32f103xb.o"
 --library_type=microlib --strict --scatter "dfhrtos\dfhrtos.sct"
 

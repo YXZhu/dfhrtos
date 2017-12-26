@@ -45,3 +45,5 @@ dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.
 dfhrtos\main.o: .\myuser\echo.h
 dfhrtos\main.o: .\myuser\hmc5983.h
 dfhrtos\main.o: .\myuser\flash.h
+dfhrtos\main.o: .\myuser\moto.h
+dfhrtos\main.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\math.h

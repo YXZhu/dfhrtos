@@ -54,15 +54,18 @@
 #include "echo.h"
 #include "hmc5983.h"
 #include "flash.h"
+#include "moto.h"
+#include "math.h"
+
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
-DMA_HandleTypeDef hdma_i2c1_rx;
-DMA_HandleTypeDef hdma_i2c1_tx;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
 
@@ -78,16 +81,20 @@ osThreadId hmc5983Handle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 osThreadId startinitHandle;
+osThreadId main_1Handle;
+osThreadId Echo_5Handle;
+osThreadId Echo_6Handle;
+osThreadId moto_jzHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_TIM4_Init(void);
 void Echo_1Task(void const * argument);
 void Echo_2task(void const * argument);
 void Echo_3task(void const * argument);
@@ -102,16 +109,20 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
- unsigned char SW1,SW2,SW3,SW4;
- uint32_t ED1,ED2,ED3,ED4;
- uint32_t EDjl1 = 0,EDjl2 = 0,EDjl3 = 0,EDjl4 = 0;
- unsigned char temp1,temp2,temp3,temp4;	
- uint32_t echo1[2], echo2[2], echo3[2], echo4[2];
+ unsigned char SW1,SW2,SW3,SW4,SW5,SW6,SFmoto;
+ uint32_t ED1,ED2,ED3,ED4,ED5,ED6;
+ uint32_t EDjl1 = 0,EDjl2 = 0,EDjl3 = 0,EDjl4 = 0,EDjl5 = 0,EDjl6 = 0;
+ unsigned char temp1,temp2,temp3,temp4,temp5,temp6;	
+ uint32_t echo1[2], echo2[2], echo3[2], echo4[2],echo5[2],echo6[2];
  double angle;
  uint16_t angle1;
- int16_t x,y,z,offsetX=0,offsetY=0,offsetZ=0;
+ int16_t x,y,z,offsetX=0,offsetY=0,offsetZ=0,hmcwritedata[4],hmcreaddata[4];
  
  void startinittask(void const * argument);
+ void main_1task(void const * argument);
+ void Echo_5task(void const * argument);
+ void Echo_6task(void const * argument);
+ extern void moto_jztask(void const * argument);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -143,18 +154,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_TIM4_Init();
 
   /* USER CODE BEGIN 2 */
 
-   HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
-   TIM3->CCR1 = 600;
-   TIM3->CCR2 = 600;
+   HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
+   TIM3->CCR3 = 600;
+   TIM3->CCR4 = 600;
 //	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 4, 0);
 //	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 4, 0);
 //	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -165,10 +176,13 @@ int main(void)
 //	HAL_TIM_IC_Start_DMA(&htim1,TIM_CHANNEL_3,echo3,1);
 //	HAL_TIM_IC_Start_DMA(&htim1,TIM_CHANNEL_1,echo4,1);
     HAL_TIM_Base_Start_IT(&htim1);
+	 HAL_TIM_Base_Start_IT(&htim4);
 	HAL_TIM_IC_Start_IT(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_IC_Start_IT(&htim1,TIM_CHANNEL_2);
 	HAL_TIM_IC_Start_IT(&htim1,TIM_CHANNEL_3);
 	HAL_TIM_IC_Start_IT(&htim1,TIM_CHANNEL_4);
+	HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_3);
+	HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_4);
 	//hmc5983_init();
   /* USER CODE END 2 */
 
@@ -404,20 +418,73 @@ static void MX_TIM3_Init(void)
   }
 
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 800;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/* TIM4 init function */
+static void MX_TIM4_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+  TIM_IC_InitTypeDef sConfigIC;
+
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 72-1;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 0xFFFF;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
 }
 
@@ -440,24 +507,6 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/** 
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void) 
-{
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-  /* DMA1_Channel7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
-
-}
-
 /** Configure pins as 
         * Analog 
         * Input 
@@ -471,67 +520,362 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Trig_1_Pin|Trig_2_Pin|Trig_3_Pin|Trig_4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, Echo_1state_Pin|Echo_2state_Pin|Echo_3state_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, Trig_1_Pin|Trig_2_Pin|Trig_3_Pin|Trig_4_Pin 
+                          |Trig_5_Pin|Trig_6_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, N1_Pin|N2_Pin|N3_Pin|N4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : Trig_1_Pin Trig_2_Pin Trig_3_Pin Trig_4_Pin */
-  GPIO_InitStruct.Pin = Trig_1_Pin|Trig_2_Pin|Trig_3_Pin|Trig_4_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Echo_4state_GPIO_Port, Echo_4state_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(I2CERR_GPIO_Port, I2CERR_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : Echo_1state_Pin Echo_2state_Pin Echo_3state_Pin */
+  GPIO_InitStruct.Pin = Echo_1state_Pin|Echo_2state_Pin|Echo_3state_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Trig_1_Pin Trig_2_Pin Trig_3_Pin Trig_4_Pin 
+                           Trig_5_Pin Trig_6_Pin */
+  GPIO_InitStruct.Pin = Trig_1_Pin|Trig_2_Pin|Trig_3_Pin|Trig_4_Pin 
+                          |Trig_5_Pin|Trig_6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : N1_Pin N2_Pin N3_Pin N4_Pin */
   GPIO_InitStruct.Pin = N1_Pin|N2_Pin|N3_Pin|N4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Echo_4state_Pin */
+  GPIO_InitStruct.Pin = Echo_4state_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(Echo_4state_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : hmc_init_Pin mgstart_Pin */
+  GPIO_InitStruct.Pin = hmc_init_Pin|mgstart_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : I2CERR_Pin */
+  GPIO_InitStruct.Pin = I2CERR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(I2CERR_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
 void startinittask(void const * argument)
-{
-	hmc5983jzinit();
-  osThreadDef(Echo_1, Echo_1Task, osPriorityRealtime, 0, 128);
-  Echo_1Handle = osThreadCreate(osThread(Echo_1), NULL);
+{  
+	uint8_t aa = 1;
+	for(;;)
+	{
+	
+			if(HAL_GPIO_ReadPin(hmc_init_GPIO_Port,hmc_init_Pin) == 1)
+	      {
+				osDelay(500);
+					if(HAL_GPIO_ReadPin(hmc_init_GPIO_Port,hmc_init_Pin) == 0)
+					{
+						//osDelay(500);				
+						moto_stop();					
+							  osThreadDef(Echo_1, Echo_1Task, osPriorityRealtime, 0, 128);
+							  Echo_1Handle = osThreadCreate(osThread(Echo_1), NULL);
 
-  /* definition and creation of Echo_2 */
-  osThreadDef(Echo_2, Echo_2task, osPriorityRealtime, 0, 128);
-  Echo_2Handle = osThreadCreate(osThread(Echo_2), NULL);
+							  /* definition and creation of Echo_2 */
+							  osThreadDef(Echo_2, Echo_2task, osPriorityRealtime, 0, 128);
+							  Echo_2Handle = osThreadCreate(osThread(Echo_2), NULL);
 
-  /* definition and creation of Echo_3 */
-  osThreadDef(Echo_3, Echo_3task, osPriorityRealtime, 0, 128);
-  Echo_3Handle = osThreadCreate(osThread(Echo_3), NULL);
+							  /* definition and creation of Echo_3 */
+							  osThreadDef(Echo_3, Echo_3task, osPriorityRealtime, 0, 128);
+							  Echo_3Handle = osThreadCreate(osThread(Echo_3), NULL);
 
-  /* definition and creation of Echo_4 */
-  osThreadDef(Echo_4, Echo_4task, osPriorityRealtime, 0, 128);
-  Echo_4Handle = osThreadCreate(osThread(Echo_4), NULL);
+							  /* definition and creation of Echo_4 */
+							  osThreadDef(Echo_4, Echo_4task, osPriorityRealtime, 0, 128);
+							  Echo_4Handle = osThreadCreate(osThread(Echo_4), NULL);
+							
+							  /* definition and creation of Echo_5 */
+							  osThreadDef(Echo_5,Echo_5task,osPriorityRealtime, 0, 128);
+							  Echo_5Handle = osThreadCreate(osThread(Echo_5), NULL);
 
-  /* definition and creation of myTask05 */
-  osThreadDef(myTask05, StartTask05, osPriorityNormal, 0, 256);
-  myTask05Handle = osThreadCreate(osThread(myTask05), NULL);
+							  /* definition and creation of Echo_6 */
+							  osThreadDef(Echo_6, Echo_6task, osPriorityRealtime, 0, 128);
+							  Echo_6Handle = osThreadCreate(osThread(Echo_6), NULL);
+										  
+							  /* definition and creation of hmc5983 */
+							  osThreadDef(hmc5983, hmc5983task, osPriorityRealtime, 0, 128);
+							  hmc5983Handle = osThreadCreate(osThread(hmc5983), NULL);
 
-  /* definition and creation of myTask06 */
-  osThreadDef(myTask06, StartTask06, osPriorityHigh, 0, 64);
-  myTask06Handle = osThreadCreate(osThread(myTask06), NULL);
+                     osThreadDef(myTask05, StartTask05, osPriorityNormal, 0, 256);
+						  myTask05Handle = osThreadCreate(osThread(myTask05), NULL);
+						
+					  aa = 1;
+					}
+					else 
+					{ 
+						while(HAL_GPIO_ReadPin(hmc_init_GPIO_Port,hmc_init_Pin) == 1){}
+						if(aa ==1)
+						{
+						vTaskDelete(hmc5983Handle);
+						vTaskDelete(Echo_1Handle);
+						vTaskDelete(Echo_2Handle);
+						vTaskDelete(Echo_3Handle);
+						vTaskDelete(Echo_4Handle);
+						vTaskDelete(Echo_5Handle);
+						vTaskDelete(Echo_6Handle);
+						vTaskDelete(myTask05Handle);
+							aa = 0;
+						}
+						hmc5983jzinit();
+					}
+	       
+		   }
+		if(HAL_GPIO_ReadPin(mgstart_GPIO_Port,mgstart_Pin) == 1)
+		{    osDelay(300);
+			if(HAL_GPIO_ReadPin(mgstart_GPIO_Port,mgstart_Pin) == 1)
+		   { 
+				while(HAL_GPIO_ReadPin(mgstart_GPIO_Port,mgstart_Pin) == 1){}
+			   flashread1(hmcreaddata,4);
+			  offsetX = hmcreaddata[1];
+			  offsetY = hmcreaddata[2];
+			  offsetZ = hmcreaddata[3];
+			  //osDelay(500);
+					  osThreadDef(Echo_1, Echo_1Task, osPriorityRealtime, 0, 128);
+					  Echo_1Handle = osThreadCreate(osThread(Echo_1), NULL);
 
-  /* definition and creation of myTask07 */
-  osThreadDef(myTask07, StartTask07,osPriorityRealtime , 0, 64);
-  myTask07Handle = osThreadCreate(osThread(myTask07), NULL);
+					  /* definition and creation of Echo_2 */
+					  osThreadDef(Echo_2, Echo_2task, osPriorityRealtime, 0, 128);
+					  Echo_2Handle = osThreadCreate(osThread(Echo_2), NULL);
 
-  /* definition and creation of hmc5983 */
-  osThreadDef(hmc5983, hmc5983task, osPriorityRealtime, 0, 128);
-  hmc5983Handle = osThreadCreate(osThread(hmc5983), NULL);
-  
-  vTaskDelete(startinitHandle);
+					  /* definition and creation of Echo_3 */
+					  osThreadDef(Echo_3, Echo_3task, osPriorityRealtime, 0, 128);
+					  Echo_3Handle = osThreadCreate(osThread(Echo_3), NULL);
+
+					  /* definition and creation of Echo_4 */
+					  osThreadDef(Echo_4, Echo_4task, osPriorityRealtime, 0, 128);
+					  Echo_4Handle = osThreadCreate(osThread(Echo_4), NULL);
+					
+					  /* definition and creation of Echo_5 */
+					  osThreadDef(Echo_5,Echo_5task,osPriorityRealtime, 0, 128);
+					  Echo_5Handle = osThreadCreate(osThread(Echo_5), NULL);
+
+					  /* definition and creation of Echo_6 */
+					  osThreadDef(Echo_6, Echo_6task, osPriorityRealtime, 0, 128);
+					  Echo_6Handle = osThreadCreate(osThread(Echo_6), NULL);
+					  
+		//			  /* definition and creation of myTask05 */
+		//			  osThreadDef(myTask05, StartTask05, osPriorityNormal, 0, 256);
+		//			  myTask05Handle = osThreadCreate(osThread(myTask05), NULL);
+
+					  /* definition and creation of hmc5983 */
+					  osThreadDef(hmc5983, hmc5983task, osPriorityRealtime, 0, 128);
+					  hmc5983Handle = osThreadCreate(osThread(hmc5983), NULL);
+
+					  /* definition and creation of myTask07 */
+					  osThreadDef(myTask07, StartTask07,osPriorityRealtime , 0, 64);
+					  myTask07Handle = osThreadCreate(osThread(myTask07), NULL);
+
+
+					  
+					  osThreadDef(main_1, main_1task, osPriorityHigh, 0, 256);
+					  main_1Handle = osThreadCreate(osThread(main_1), NULL);
+					  
+					  osThreadDef(moto_jz, moto_jztask, osPriorityHigh, 0, 256);
+					  moto_jzHandle = osThreadCreate(osThread(moto_jz), NULL);
+						
+						/* definition and creation of myTask06 */
+					  osThreadDef(myTask06, StartTask06, osPriorityHigh, 0, 64);
+					  myTask06Handle = osThreadCreate(osThread(myTask06), NULL);
+					  
+					  vTaskSuspend(myTask07Handle);
+					  vTaskSuspend(moto_jzHandle);
+
+			  vTaskDelete(startinitHandle);
+			  if(aa == 1)
+			  vTaskDelete(myTask05Handle);
+
+			  aa = 0;
+			}
+		  }
+		osDelay(1);
+		
+  }
 }
+
+void main_1task(void const * argument)
+{
+	//osDelay(500);
+	uint8_t setmoto = 1;
+	xQueueHandle MsgQueue;
+	MsgQueue = xQueueCreate(10, sizeof(uint8_t));
+	TIM3->CCR3 = SPEEDA;
+   TIM3->CCR4 = SPEEDB;
+	for(;;)
+	{
+		if(EDjl1>400)
+		{
+			if(EDjl2>300)
+			{
+				if(EDjl4>300)
+				{
+					if(EDjl3>300)
+					{
+						if(EDjl5>300) moto_front();
+					}
+				}
+			}
+			else
+			{
+				if(EDjl3<300)
+				{
+						vTaskResume(moto_jzHandle);
+                  vTaskSuspend(main_1Handle);
+				}
+			}
+		}
+			
+		
+//		if(EDjl1>400)
+//		{
+//			if(setmoto == 1)
+//			{				
+//			   moto_front();
+//				setmoto = 0;
+//			}
+//			if(EDjl3<300|EDjl5<300)
+//		   {
+//				if(EDjl2>200)
+//				{
+//				  if(EDjl2<300)
+//				  {
+//						if(EDjl3>200)
+//						{
+//							if((EDjl2-EDjl3)>=10)
+//							{
+//								TIM3->CCR3 = 500;
+//								TIM3->CCR4 = 500;
+//								moto_left();
+//							}
+//							else if((EDjl3-EDjl2)>=10)
+//							{
+//								TIM3->CCR3 = 500;
+//								TIM3->CCR4 = 500;
+//								moto_right();
+//							}
+//							else 
+//							{
+//								 setmoto = 1;
+//								 TIM3->CCR3 = 600;
+//								 TIM3->CCR4 = 600;
+//							}
+//						}
+//						else
+//						{
+//							setmoto = 1;
+//							TIM3->CCR3 = 600;
+//							TIM3->CCR4 = 600;
+//						}
+//					}
+//				  else
+//				  {
+//					  moto_left();
+//				  }
+//				}
+//				else
+//				{
+//					setmoto = 1;
+//					TIM3->CCR3 = 600+150;
+//					TIM3->CCR4 = 600-100;
+//				}
+//			}
+//		}
+//      else
+//		{
+//			setmoto = 1;
+
+//			if(EDjl1<=150)
+//			{
+//				if(setmoto == 1)
+//				{
+//					//moto_back();
+//					//osDelay(5);
+//					moto_stop();
+//					setmoto = 0;
+//				}if(EDjl4>400&EDjl3>400)
+//					{
+//						SFmoto = 1;
+//						vTaskResume(myTask07Handle);
+//                  vTaskSuspend(main_1Handle);
+//					}
+////				if((EDjl2-EDjl3)>=10)
+////				{
+////					TIM3->CCR3 = 500;
+////					TIM3->CCR4 = 500;
+////					moto_left();
+////				}
+////				else if((EDjl3-EDjl2)>=10)
+////				{
+////					TIM3->CCR3 = 500;
+////					TIM3->CCR4 = 500;
+////					moto_right();
+////				}
+//				else 
+//				{
+//					
+//				}
+//			 }
+//			}
+        
+		osDelay (1);		
+	}
+}
+
+/* Echo_5Task function */
+void Echo_5task(void const * argument)
+{
+
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+
+  for(;;)
+  {
+	   echo_5();
+		osDelay(1);
+  }
+  /* USER CODE END 5 */ 
+}
+
+/* Echo_6task function */
+void Echo_6task(void const * argument)
+{
+  /* USER CODE BEGIN Echo_2task */
+	
+  /* Infinite loop */
+
+  for(;;)
+  {
+       echo_6();
+		osDelay(1);
+  }
+  /* USER CODE END Echo_2task */
+}
+
 /* USER CODE END 4 */
 
 /* Echo_1Task function */
@@ -599,62 +943,73 @@ void StartTask05(void const * argument)
   /* Infinite loop */
 	//uint8_t JL[] = {"前    cm左   cm右   cm后   cm"};
 	uint16_t c;
-uint8_t JL[] = {"前---.-CM 左---.-CM 右---.-CM 后---.-CM ---°  ----, ----, ----\n\r"};
+uint8_t JL[] = {"F---.- L---.- E---.- R---.- G---.- B---.- ---°  ----, ----, ----\n\r"};
 //uint8_t JL[] = {"--------------------------\n\r"};
   for(;;)
   { 
 	    angle1 = angle;    
 	   //JL[1] = echo1[0]/10000+48;
-		JL[2] = EDjl1%10000/1000+48;
-		JL[3] = EDjl1%10000%1000/100+48;
-		JL[4] = EDjl1%10000%1000%100/10+48;
-	   JL[6] = EDjl1%10000%1000%100%10+48;
+		JL[1] = EDjl1%10000/1000+48;
+		JL[2] = EDjl1%10000%1000/100+48;
+		JL[3] = EDjl1%10000%1000%100/10+48;
+	   JL[5] = EDjl1%10000%1000%100%10+48;
 	  
 	  //	JL[11] = echo1[1]/10000+48;
-		JL[12] = EDjl2%10000/1000+48;
-		JL[13] = EDjl2%10000%1000/100+48;
-		JL[14] = EDjl2%10000%1000%100/10+48;
-	   JL[16] = EDjl2%10000%1000%100%10+48;
+		JL[8] = EDjl2%10000/1000+48;
+		JL[9] = EDjl2%10000%1000/100+48;
+		JL[10] = EDjl2%10000%1000%100/10+48;
+	   JL[12] = EDjl2%10000%1000%100%10+48;
 	  
 	  // JL[21] = EDjl1/10000+48;
-		JL[22] = EDjl3%10000/1000+48;
-		JL[23] = EDjl3%10000%1000/100+48;
-		JL[24] = EDjl3%10000%1000%100/10+48;
-	   JL[26] = EDjl3%10000%1000%100%10+48;
+		JL[15] = EDjl3%10000/1000+48;
+		JL[16] = EDjl3%10000%1000/100+48;
+		JL[17] = EDjl3%10000%1000%100/10+48;
+	   JL[19] = EDjl3%10000%1000%100%10+48;
 	  
    	//JL[14] = EDjl4/10000+48;
-		JL[32] =EDjl4%10000/1000+48;
-		JL[33] = EDjl4%10000%1000/100+48;
-		JL[34] = EDjl4%10000%1000%100/10+48;
-	   JL[36] = EDjl4%10000%1000%100%10+48;
+		JL[22] = EDjl4%10000/1000+48;
+		JL[23] = EDjl4%10000%1000/100+48;
+		JL[24] = EDjl4%10000%1000%100/10+48;
+	   JL[26] = EDjl4%10000%1000%100%10+48;
 		
-		JL[40] = angle1/100+48;
-		JL[41] = angle1%100/10+48;
-	   JL[42] = angle1%100%10+48;
+		JL[29] = EDjl5%10000/1000+48;
+		JL[30] = EDjl5%10000%1000/100+48;
+		JL[31] = EDjl5%10000%1000%100/10+48;
+	   JL[33] = EDjl5%10000%1000%100%10+48;
+	  
+   	//JL[14] = EDjl4/10000+48;
+		JL[36] = EDjl6%10000/1000+48;
+		JL[37] = EDjl6%10000%1000/100+48;
+		JL[38] = EDjl6%10000%1000%100/10+48;
+	   JL[40] = EDjl6%10000%1000%100%10+48;
 		
-		if(x<0) JL[46] = '-',c = -x;
-		else JL[46] = ' ',c = x;
+		JL[42] = angle1/100+48;
+		JL[43] = angle1%100/10+48;
+	   JL[44] = angle1%100%10+48;
 		
-		JL[47] = c/1000+48;
-		JL[48] = c%1000/100+48;
-	   JL[49] = c%1000%100/10+48;
-		JL[50] = c%1000%100%10+48;
+		if(x<0) JL[48] = '-',c = -x;
+		else JL[48] = ' ',c = x;
 		
-		if(y<0) JL[52] = '-',c = -y;
-		else JL[52] = ' ',c = y;
+		JL[49] = c/1000+48;
+		JL[50] = c%1000/100+48;
+	   JL[51] = c%1000%100/10+48;
+		JL[52] = c%1000%100%10+48;
 		
-		JL[53] = c/1000+48;
-		JL[54] = c%1000/100+48;
-	   JL[55] = c%1000%100/10+48;
-		JL[56] = c%1000%100%10+48;
+		if(y<0) JL[54] = '-',c = -y;
+		else JL[54] = ' ',c = y;
 		
-		if(z<0) JL[58] = '-',c = -z;
-		else JL[58] = ' ',c = z;
+		JL[55] = c/1000+48;
+		JL[56] = c%1000/100+48;
+	   JL[57] = c%1000%100/10+48;
+		JL[58] = c%1000%100%10+48;
 		
-		JL[59] = c/1000+48;
-		JL[60] = c%1000/100+48;
-	   JL[61] = c%1000%100/10+48;
-		JL[62] = c%1000%100%10+48;
+		if(z<0) JL[60] = '-',c = -z;
+		else JL[60] = ' ',c = z;
+		
+		JL[61] = c/1000+48;
+		JL[62] = c%1000/100+48;
+	   JL[63] = c%1000%100/10+48;
+		JL[64] = c%1000%100%10+48;
 //		JL[9] = EDjl2/100+48;
 //		JL[10] = EDjl2%100/10+48;
 //		JL[11] = EDjl2%100%10+48;
@@ -666,8 +1021,8 @@ uint8_t JL[] = {"前---.-CM 左---.-CM 右---.-CM 后---.-CM ---°  ----, ----, ----
 //		JL[23] = EDjl4/100+48;
 //		JL[24] = EDjl4%100/10+48;
 //		JL[25] = EDjl4%100%10+48;
-	 HAL_UART_Transmit(&huart2,JL,64,0xffff); 
-	 osDelay(60); 
+	 HAL_UART_Transmit(&huart2,JL,66,0xffff);
+	 osDelay(120);
   }
   /* USER CODE END StartTask05 */
 }
@@ -677,8 +1032,8 @@ void StartTask06(void const * argument)
 {
   /* USER CODE BEGIN StartTask06 */
   /* Infinite loop */
-		uint16_t led0pwmval=800;
-	 uint8_t dir=1;
+//		uint16_t led0pwmval=800;
+//	 uint8_t dir=1;
   for(;;)
   {
 //      		osDelay(5);	 
@@ -688,8 +1043,6 @@ void StartTask06(void const * argument)
 // 		if(led0pwmval>996)dir=0;
 //		if(led0pwmval==800)dir=1;
 //	  TIM3->CCR2 = led0pwmval;
-	 if(EDjl1<200) HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_RESET) ;
-	  else HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
 	  osDelay(1);
   
   }
@@ -701,59 +1054,15 @@ void StartTask07(void const * argument)
 {
   /* USER CODE BEGIN StartTask07 */
   /* Infinite loop */
-	uint16_t du,du1,du3,tem=1;
-	
-	HAL_GPIO_WritePin(N1_GPIO_Port,N1_Pin,GPIO_PIN_SET);
-   HAL_GPIO_WritePin(N2_GPIO_Port,N2_Pin,GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(N3_GPIO_Port,N3_Pin,GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(N4_GPIO_Port,N4_Pin,GPIO_PIN_SET);
   for(;;)
   { 
-	  du1 = angle;
-	  if(tem ==1) 
+	  moto_90(SFmoto);
+	  if(SFmoto == 2)
 	  {
-		  du = angle;
-	     tem = 0;
-		  TIM3->CCR1 = 600;
-	     TIM3->CCR2 = 600;
+		  vTaskResume(main_1Handle);
+		  vTaskSuspend(myTask07Handle);
 	  }
-	  osDelay(1);
-	  if(du>du1)
-	  {
-		  du3 = (360-du)+du1;
-		  
-	  }
-	  else
-	 {
-		 du3 = du1-du;
-	 }
-	 
-	  if(du3>50&du3<90&tem ==0)
-	 {
-		  TIM3->CCR1 = 400;
-	     TIM3->CCR2 = 400;
-		 tem = 2;
-	 }
-	 
-	 if(du3>87&du3<91)
-	 {
-		  HAL_GPIO_WritePin(N1_GPIO_Port,N1_Pin,GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(N2_GPIO_Port,N2_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(N3_GPIO_Port,N3_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(N4_GPIO_Port,N4_Pin,GPIO_PIN_RESET);
-		 osDelay(2);
-		 HAL_GPIO_WritePin(N1_GPIO_Port,N1_Pin,GPIO_PIN_SET);
-		     HAL_GPIO_WritePin(N2_GPIO_Port,N2_Pin,GPIO_PIN_SET);
-		     HAL_GPIO_WritePin(N3_GPIO_Port,N3_Pin,GPIO_PIN_SET);
-           HAL_GPIO_WritePin(N4_GPIO_Port,N4_Pin,GPIO_PIN_SET);
-		 osDelay(1000);
-		 HAL_GPIO_WritePin(N1_GPIO_Port,N1_Pin,GPIO_PIN_SET);
-		 HAL_GPIO_WritePin(N2_GPIO_Port,N2_Pin,GPIO_PIN_RESET);
-		 HAL_GPIO_WritePin(N3_GPIO_Port,N3_Pin,GPIO_PIN_RESET);
-       HAL_GPIO_WritePin(N4_GPIO_Port,N4_Pin,GPIO_PIN_SET);
-		 
-			  tem = 1;
-		}
+	 osDelay(1);
   }
   /* USER CODE END StartTask07 */
 }

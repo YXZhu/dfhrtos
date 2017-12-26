@@ -51,11 +51,18 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#define SPEEDA 600
+#define SPEEDB 600
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
 
+#define Echo_1state_Pin GPIO_PIN_13
+#define Echo_1state_GPIO_Port GPIOC
+#define Echo_2state_Pin GPIO_PIN_14
+#define Echo_2state_GPIO_Port GPIOC
+#define Echo_3state_Pin GPIO_PIN_15
+#define Echo_3state_GPIO_Port GPIOC
 #define Trig_1_Pin GPIO_PIN_0
 #define Trig_1_GPIO_Port GPIOA
 #define Trig_2_Pin GPIO_PIN_1
@@ -64,10 +71,14 @@
 #define Trig_3_GPIO_Port GPIOA
 #define Trig_4_Pin GPIO_PIN_5
 #define Trig_4_GPIO_Port GPIOA
-#define ENA_Pin GPIO_PIN_6
-#define ENA_GPIO_Port GPIOA
-#define ENB_Pin GPIO_PIN_7
-#define ENB_GPIO_Port GPIOA
+#define Trig_5_Pin GPIO_PIN_6
+#define Trig_5_GPIO_Port GPIOA
+#define Trig_6_Pin GPIO_PIN_7
+#define Trig_6_GPIO_Port GPIOA
+#define ENA_Pin GPIO_PIN_0
+#define ENA_GPIO_Port GPIOB
+#define ENB_Pin GPIO_PIN_1
+#define ENB_GPIO_Port GPIOB
 #define N1_Pin GPIO_PIN_12
 #define N1_GPIO_Port GPIOB
 #define N2_Pin GPIO_PIN_13
@@ -84,6 +95,18 @@
 #define Echo_3_GPIO_Port GPIOA
 #define Echo_4_Pin GPIO_PIN_11
 #define Echo_4_GPIO_Port GPIOA
+#define Echo_4state_Pin GPIO_PIN_15
+#define Echo_4state_GPIO_Port GPIOA
+#define hmc_init_Pin GPIO_PIN_3
+#define hmc_init_GPIO_Port GPIOB
+#define mgstart_Pin GPIO_PIN_4
+#define mgstart_GPIO_Port GPIOB
+#define I2CERR_Pin GPIO_PIN_5
+#define I2CERR_GPIO_Port GPIOB
+#define Echo_5_Pin GPIO_PIN_8
+#define Echo_5_GPIO_Port GPIOB
+#define Echo_6_Pin GPIO_PIN_9
+#define Echo_6_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
