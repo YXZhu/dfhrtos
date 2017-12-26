@@ -1,0 +1,47 @@
+dfhrtos\main.o: ../Src/main.c
+dfhrtos\main.o: ../Inc/main.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+dfhrtos\main.o: ../Inc/stm32f1xx_hal_conf.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
+dfhrtos\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
+dfhrtos\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
+dfhrtos\main.o: ../Drivers/CMSIS/Include/core_cm3.h
+dfhrtos\main.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+dfhrtos\main.o: ../Drivers/CMSIS/Include/core_cmInstr.h
+dfhrtos\main.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+dfhrtos\main.o: ../Drivers/CMSIS/Include/core_cmFunc.h
+dfhrtos\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+dfhrtos\main.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\stdio.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma_ex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
+dfhrtos\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+dfhrtos\main.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\stddef.h
+dfhrtos\main.o: ../Inc/FreeRTOSConfig.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3/portmacro.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
+dfhrtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
+dfhrtos\main.o: .\myuser\echo.h
+dfhrtos\main.o: .\myuser\hmc5983.h
+dfhrtos\main.o: .\myuser\flash.h
