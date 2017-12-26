@@ -1,0 +1,30 @@
+dfhrtos\pid_c_stm32.o: ..\..\STM32F10x_DSP_Lib_V2.0.0\Libraries\STM32F10x_DSP_Lib\src\PID_C_stm32.c
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+dfhrtos\pid_c_stm32.o: ../Inc/stm32f1xx_hal_conf.h
+dfhrtos\pid_c_stm32.o: ../Inc/main.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Include/core_cm3.h
+dfhrtos\pid_c_stm32.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Include/core_cmInstr.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Include/core_cmFunc.h
+dfhrtos\pid_c_stm32.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+dfhrtos\pid_c_stm32.o: D:\Program Files\keil5\ARM\ARMCC\Bin\..\include\stdio.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma_ex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
+dfhrtos\pid_c_stm32.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+dfhrtos\pid_c_stm32.o: ..\..\STM32F10x_DSP_Lib_V2.0.0\Libraries\STM32F10x_DSP_Lib\inc\stm32_dsp.h
